@@ -11,5 +11,20 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor:   ['react', 'react-dom', 'react-router-dom'],
+          query:    ['@tanstack/react-query'],
+          charts:   ['recharts'],
+          dnd:      ['react-beautiful-dnd'],
+        }
+      }
+    }
   }
+})
 })
