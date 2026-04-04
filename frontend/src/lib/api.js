@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -25,26 +25,26 @@ api.interceptors.response.use(
 
 // Auth
 export const authAPI = {
-  login: (data) => api.post('/auth/login', data),
+  login:    (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
 }
 
 // Tasks
 export const taskAPI = {
-  getAll: () => api.get('/tasks'),
-  getKanban: () => api.get('/tasks/kanban'),
-  getById: (id) => api.get(`/tasks/${id}`),
-  create: (data) => api.post('/tasks', data),
-  update: (id, data) => api.put(`/tasks/${id}`, data),
+  getAll:       ()           => api.get('/tasks'),
+  getKanban:    ()           => api.get('/tasks/kanban'),
+  getById:      (id)         => api.get(`/tasks/${id}`),
+  create:       (data)       => api.post('/tasks', data),
+  update:       (id, data)   => api.put(`/tasks/${id}`, data),
   updateStatus: (id, status) => api.patch(`/tasks/${id}/status?status=${status}`),
-  delete: (id) => api.delete(`/tasks/${id}`),
+  delete:       (id)         => api.delete(`/tasks/${id}`),
 }
 
 // Comments
 export const commentAPI = {
-  getAll: (taskId) => api.get(`/tasks/${taskId}/comments`),
-  create: (taskId, data) => api.post(`/tasks/${taskId}/comments`, data),
-  delete: (taskId, commentId) => api.delete(`/tasks/${taskId}/comments/${commentId}`),
+  getAll: (taskId)             => api.get(`/tasks/${taskId}/comments`),
+  create: (taskId, data)       => api.post(`/tasks/${taskId}/comments`, data),
+  delete: (taskId, commentId)  => api.delete(`/tasks/${taskId}/comments/${commentId}`),
 }
 
 // Users
