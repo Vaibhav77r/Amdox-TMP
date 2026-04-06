@@ -25,13 +25,18 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final String allowedOrigins;
 
-    @Value("${app.cors.allowed-origins}")
-    private String allowedOrigins;
+    public SecurityConfig(
+            JwtAuthFilter jwtAuthFilter,
+            @Value("${app.cors.allowed-origins:http://localhost:5173}") String allowedOrigins
+    ) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.allowedOrigins = allowedOrigins;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
