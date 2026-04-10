@@ -23,39 +23,64 @@ public class AuthService {
 
     public AuthDTO.AuthResponse register(AuthDTO.RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new RuntimeException("Email already in use: " + request.getEmail());
         }
+
+        // Safe role parsing with fallback to VIEWER
+        User.Role role;
+        try {
+            String roleStr = request.getRole();
+            role = (roleStr != null && !roleStr.isBlank())
+                    ? User.Role.valueOf(roleStr.toUpperCase().trim())
+                    : User.Role.VIEWER;
+        } catch (IllegalArgumentException e) {
+            role = User.Role.VIEWER;
+        }
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(User.Role.valueOf(request.getRole().toUpperCase()))
+                .role(role)
                 .build();
-        userRepository.save(user);
+
+        User savedUser = userRepository.save(user);
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtUtils.generateToken(authentication);
 
         return AuthDTO.AuthResponse.builder()
                 .token(token)
-                .id(user.getId())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .role(user.getRole().name())
+                .type("Bearer")
+                .id(savedUser.getId())
+                .fullName(savedUser.getFullName())
+                .email(savedUser.getEmail())
+                .role(savedUser.getRole().name())
                 .build();
     }
 
     public AuthDTO.AuthResponse login(AuthDTO.LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtUtils.generateToken(authentication);
 
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found: " + request.getEmail()));
+
         return AuthDTO.AuthResponse.builder()
                 .token(token)
+                .type("Bearer")
                 .id(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
