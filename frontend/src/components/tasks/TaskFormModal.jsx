@@ -19,15 +19,18 @@ export default function TaskFormModal({ isOpen, onClose, task = null }) {
   useEffect(() => {
     if (task) {
       setForm({
-        title:      task.title || '',
-        description:task.description || '',
-        priority:   task.priority || 'MEDIUM',
-        status:     task.status || 'TODO',
-        dueDate:    task.dueDate ? task.dueDate.slice(0, 16) : '',
-        assigneeId: task.assignee?.id || '',
+        title:       task.title || '',
+        description: task.description || '',
+        priority:    task.priority || 'MEDIUM',
+        status:      task.status || 'TODO',
+        dueDate:     task.dueDate ? task.dueDate.slice(0, 16) : '',
+        assigneeId:  task.assignee?.id || '',
       })
     } else {
-      setForm({ title: '', description: '', priority: 'MEDIUM', status: 'TODO', dueDate: '', assigneeId: '' })
+      setForm({
+        title: '', description: '', priority: 'MEDIUM',
+        status: 'TODO', dueDate: '', assigneeId: '',
+      })
     }
   }, [task, isOpen])
 
@@ -38,17 +41,23 @@ export default function TaskFormModal({ isOpen, onClose, task = null }) {
   })
 
   const mutation = useMutation({
-    mutationFn: (data) => isEdit
-      ? taskAPI.update(task.id, data)
-      : taskAPI.create(data),
+    mutationFn: (data) =>
+      isEdit ? taskAPI.update(task.id, data) : taskAPI.create(data),
     onSuccess: () => {
-      qc.invalidateQueries(['tasks'])
-      qc.invalidateQueries(['kanban'])
-      qc.invalidateQueries(['stats'])
+      // Invalidate ALL related queries so every page refreshes
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['kanban'] })
+      qc.invalidateQueries({ queryKey: ['stats'] })
+      // Also refetch immediately instead of waiting
+      qc.refetchQueries({ queryKey: ['tasks'] })
+      qc.refetchQueries({ queryKey: ['kanban'] })
       toast.success(isEdit ? 'Task updated!' : 'Task created!')
       onClose()
     },
-    onError: () => toast.error('Something went wrong'),
+    onError: (err) => {
+      console.error('Task mutation error:', err)
+      toast.error(err?.response?.data?.message || 'Something went wrong')
+    },
   })
 
   const handleSubmit = (e) => {
@@ -56,7 +65,7 @@ export default function TaskFormModal({ isOpen, onClose, task = null }) {
     if (!form.title.trim()) return toast.error('Title is required')
     mutation.mutate({
       ...form,
-      dueDate:    form.dueDate || null,
+      dueDate:    form.dueDate    || null,
       assigneeId: form.assigneeId || null,
     })
   }
@@ -69,49 +78,70 @@ export default function TaskFormModal({ isOpen, onClose, task = null }) {
         {/* Title */}
         <div>
           <label className="label">Title *</label>
-          <input className="input" value={form.title} onChange={e => set('title', e.target.value)}
-            placeholder="Enter task title..." required />
+          <input
+            className="input"
+            value={form.title}
+            onChange={e => set('title', e.target.value)}
+            placeholder="Enter task title..."
+            required
+          />
         </div>
 
         {/* Description */}
         <div>
           <label className="label">Description</label>
-          <textarea className="input resize-none" rows={3} value={form.description}
+          <textarea
+            className="input resize-none"
+            rows={3}
+            value={form.description}
             onChange={e => set('description', e.target.value)}
-            placeholder="Describe the task..." />
+            placeholder="Describe the task..."
+          />
         </div>
 
-        {/* Priority & Status */}
+        {/* Priority & Status / Due Date */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="label">Priority</label>
             <select className="input" value={form.priority} onChange={e => set('priority', e.target.value)}>
-              {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+              {PRIORITIES.map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
             </select>
           </div>
-          {isEdit && (
+
+          {isEdit ? (
             <div>
               <label className="label">Status</label>
               <select className="input" value={form.status} onChange={e => set('status', e.target.value)}>
-                {STATUSES.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+                {STATUSES.map(s => (
+                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                ))}
               </select>
             </div>
-          )}
-          {!isEdit && (
+          ) : (
             <div>
               <label className="label">Due Date</label>
-              <input type="datetime-local" className="input" value={form.dueDate}
-                onChange={e => set('dueDate', e.target.value)} />
+              <input
+                type="datetime-local"
+                className="input"
+                value={form.dueDate}
+                onChange={e => set('dueDate', e.target.value)}
+              />
             </div>
           )}
         </div>
 
-        {/* Due Date (edit mode) */}
+        {/* Due Date for edit mode */}
         {isEdit && (
           <div>
             <label className="label">Due Date</label>
-            <input type="datetime-local" className="input" value={form.dueDate}
-              onChange={e => set('dueDate', e.target.value)} />
+            <input
+              type="datetime-local"
+              className="input"
+              value={form.dueDate}
+              onChange={e => set('dueDate', e.target.value)}
+            />
           </div>
         )}
 
@@ -121,14 +151,18 @@ export default function TaskFormModal({ isOpen, onClose, task = null }) {
           <select className="input" value={form.assigneeId} onChange={e => set('assigneeId', e.target.value)}>
             <option value="">Unassigned</option>
             {users.map(u => (
-              <option key={u.id} value={u.id}>{u.fullName} ({u.role})</option>
+              <option key={u.id} value={u.id}>
+                {u.fullName} ({u.role})
+              </option>
             ))}
           </select>
         </div>
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+          <button type="button" onClick={onClose} className="btn-secondary flex-1">
+            Cancel
+          </button>
           <button type="submit" disabled={mutation.isPending} className="btn-primary flex-1">
             {mutation.isPending ? 'Saving...' : isEdit ? 'Update Task' : 'Create Task'}
           </button>

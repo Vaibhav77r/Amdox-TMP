@@ -9,7 +9,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 30000,
+      staleTime: 0,           // Always consider data stale — refetch on every mount
+      refetchOnMount: true,   // Refetch when component mounts
+      refetchOnWindowFocus: false, // Don't refetch on tab switch (can be annoying)
     },
   },
 })
