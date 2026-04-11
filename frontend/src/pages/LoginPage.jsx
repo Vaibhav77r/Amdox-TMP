@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { authAPI } from '../lib/api'
 import useAuthStore from '../store/authStore'
 import toast from 'react-hot-toast'
-import { Zap, Eye, EyeOff } from 'lucide-react'
+import { Zap, Eye, EyeOff, Heart } from 'lucide-react'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -29,13 +29,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-dark-950 flex flex-col items-center justify-center p-4">
+
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-primary-800/5 rounded-full blur-2xl" />
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md flex-1 flex flex-col justify-center">
+
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8 justify-center">
           <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center shadow-lg shadow-primary-600/30">
@@ -75,14 +78,19 @@ export default function LoginPage() {
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                 />
-                <button type="button" onClick={() => setShowPass(v => !v)}
+                <button
+                  type="button"
+                  onClick={() => setShowPass(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300 transition-colors">
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <button type="submit" disabled={mutation.isPending} className="btn-primary w-full py-3 mt-2 text-base">
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="btn-primary w-full py-3 mt-2 text-base">
               {mutation.isPending ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
@@ -94,7 +102,22 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
+
       </div>
+
+      {/* Footer */}
+      <div className="relative pb-6 pt-4">
+        <p className="flex items-center gap-1.5 text-xs text-dark-500">
+          Made with
+          <Heart
+            size={13}
+            className="text-red-400 fill-red-400 animate-pulse"
+          />
+          by
+          <span className="text-primary-400 font-medium">Vaibhav Rane</span>
+        </p>
+      </div>
+
     </div>
   )
 }
