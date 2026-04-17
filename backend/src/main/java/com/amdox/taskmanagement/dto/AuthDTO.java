@@ -9,35 +9,38 @@ public class AuthDTO {
 
     @Data
     public static class RegisterRequest {
-        @NotBlank
+        @NotBlank(message = "Full name is required")
         private String fullName;
 
-        @Email
-        @NotBlank
+        @Email(message = "Invalid email")
+        @NotBlank(message = "Email is required")
         private String email;
 
-        @NotBlank
-        @Size(min = 6)
+        @NotBlank(message = "Password is required")
+        @Size(min = 6, message = "Password must be at least 6 characters")
         private String password;
 
+        // Default to VIEWER — never null
         private String role = "VIEWER";
     }
 
     @Data
     public static class LoginRequest {
-        @Email
-        @NotBlank
+        @Email(message = "Invalid email")
+        @NotBlank(message = "Email is required")
         private String email;
 
-        @NotBlank
+        @NotBlank(message = "Password is required")
         private String password;
     }
 
     @Data
     @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
     public static class AuthResponse {
         private String token;
-        private String type = "Bearer";
+        private String type;
         private Long id;
         private String fullName;
         private String email;

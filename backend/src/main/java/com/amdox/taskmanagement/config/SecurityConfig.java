@@ -68,33 +68,32 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-        // Build allowed origins list from env var (comma-separated)
+        // Explicit origins from env var (comma-separated)
         List<String> origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
+        config.setAllowedOrigins(origins);
 
-        configuration.setAllowedOrigins(origins);
-
-        // Also allow ALL vercel.app preview URLs using pattern matching
-        configuration.setAllowedOriginPatterns(List.of(
+        // Wildcard patterns — covers ALL Vercel preview URLs
+        config.setAllowedOriginPatterns(List.of(
                 "https://*.vercel.app",
                 "http://localhost:*",
                 "https://localhost:*"
         ));
 
-        configuration.setAllowedMethods(
+        config.setAllowedMethods(
             Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }

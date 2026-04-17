@@ -2,7 +2,6 @@ package com.amdox.taskmanagement.dto;
 
 import com.amdox.taskmanagement.entity.Task;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -12,13 +11,16 @@ public class TaskDTO {
 
     @Data
     public static class CreateRequest {
-        @NotBlank
+        @NotBlank(message = "Title is required")
         private String title;
+
         private String description;
 
-        @NotNull
-        private Task.Priority priority;
+        // Default to MEDIUM if null — avoid NPE in service
+        private Task.Priority priority = Task.Priority.MEDIUM;
+
         private LocalDateTime dueDate;
+
         private Long assigneeId;
     }
 
